@@ -26,26 +26,20 @@ public with sharing class OrderOfExecutionExplorer {
 
 	private List<String> getValidationRulesTooling(){
 		String queryUrl =
-			'/services/data/v59.0/tooling/query?q=SELECT+DurableId,QualifiedApiName,(SELECT+ValidationName+FROM+ValidationRules+WHERE+Active=TRUE)+FROM+EntityDefinition+WHERE+DeveloperName=\''+ this.developerName + '\'';
+			'callout:Tooling_API_Credential/services/data/v59.0/tooling/query?q=SELECT+DurableId,QualifiedApiName,(SELECT+ValidationName+FROM+ValidationRules+WHERE+Active=TRUE)+FROM+EntityDefinition+WHERE+DeveloperName=\''+ this.developerName + '\'';
 
-		// Create the HTTP request
 		HttpRequest request = new HttpRequest();
-		request.setEndpoint(URL.getOrgDomainUrl().toExternalForm() + queryUrl);
+		request.setEndpoint(queryUrl);
 		request.setMethod('GET');
-		// TODO: add Named Credentials to call Tooling API, otherwise won't work from LWC with UserInfo.getSessionId(), except for with VF hack
-		request.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
 
-		// Send the request
 		Http http = new Http();
 		HttpResponse response = http.send(request);
 
 		EntityDefinitionWrapper entityDefinitionWrapper;
-		// Process the response
 		if (response.getStatusCode() == 200) {
 			EntityDefinitionResponseParser parser = new EntityDefinitionResponseParser();
 			entityDefinitionWrapper = parser.parse(response);
 			System.debug(entityDefinitionWrapper);
-			// System.debug(JSON.deserializeUntyped(response.getBody()));
 		} else {
 			System.debug('Error: ' + response.getStatusCode() + ' - ' + response.getStatus());
 			System.debug(response);
@@ -59,12 +53,10 @@ public with sharing class OrderOfExecutionExplorer {
 	}
 
 	private List<String> getValidationRulesMetadataApi(){
-		// Define your package version
 		MetadataService.MetadataPort service = new MetadataService.MetadataPort();
 		service.SessionHeader = new MetadataService.SessionHeader_element();
 		service.SessionHeader.sessionId = UserInfo.getSessionId();
 
-		// Retrieve the validation rules
 		MetadataService.ListMetadataQuery query = new MetadataService.ListMetadataQuery();
 		query.type_x = 'ValidationRule';
 		query.folder = this.objectApiName;
@@ -72,7 +64,6 @@ public with sharing class OrderOfExecutionExplorer {
 			new List<MetadataService.ListMetadataQuery> { query }, 59
 		);
 
-		// Display the validation rules
 		for (MetadataService.FileProperties fileProperty : fileProperties) {
 			System.debug('Validation Rule Full Name: ' + fileProperty.fullName);
 		}

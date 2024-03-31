@@ -3,6 +3,18 @@
         <div class="slds-p-around_medium">
             <lightning-input class="slds-m-bottom_medium" label="Enter record Id" value={inputValue} onchange={handleInputChange}></lightning-input>
             <lightning-button label="Submit" onclick={handleSubmit}></lightning-button>
-        </div>
+		</div>
+
+		<div lwc:if={showList} class="slds-p-around_medium">
+			<div class="slds-m-bottom_x-small"><b>Here's what will run when you update the record:</b></div>
+			<template for:each={sections} for:item="section">
+				<div key={section.id}>
+					<span class="slds-text-heading_small">{section.header}</span>
+					<template for:each={section.items} for:item="item">
+						<div key={item.id} class="indented">{item.id}) {item.name}</div>
+					</template>
+				</div>
+			</template>
+		</div>
     </lightning-card>
 </template>
