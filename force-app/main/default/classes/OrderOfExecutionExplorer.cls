@@ -19,9 +19,12 @@ public with sharing class OrderOfExecutionExplorer {
 		this.durableId = objectDefinition.DurableId;
 	}
 
-	public List<String> getOrderOfExecution(){
-		List<String> validationRules = this.getValidationRulesTooling();
-		return validationRules;
+	public Map<String, List<String>> getOrderOfExecution(){
+		Map<String, List<String>> orderOfExecutionItemsMap = new Map<String, List<String>>{
+			'Validation Rules' => this.getValidationRulesTooling(),
+			'Flows' => this.getFlows()
+		};
+		return orderOfExecutionItemsMap;
 	}
 
 	private List<String> getValidationRulesTooling(){
@@ -45,11 +48,26 @@ public with sharing class OrderOfExecutionExplorer {
 			System.debug(response);
 		}
 
-		List<String> orderOfExecutionItems = new List<String>();
+		List<String> validationRuleNames = new List<String>();
 		for (ValidationRuleWrapper validationRuleWrapper : entityDefinitionWrapper.validationRuleWrappers) {
-			orderOfExecutionItems.add(validationRuleWrapper.validationName);
+			validationRuleNames.add(validationRuleWrapper.validationName);
 		}
-		return orderOfExecutionItems;
+		return validationRuleNames;
+	}
+
+	private List<String> getFlows(){
+		List<FlowDefinitionView> flows = [
+			SELECT Label
+			FROM FlowDefinitionView
+			WHERE TriggerType IN ('RecordAfterSave', 'RecordBeforeSave')
+				AND TriggerObjectOrEventId = :this.durableId
+		];
+
+		List<String> flowLabels = new List<String>();
+		for (FlowDefinitionView flow : flows) {
+			flowLabels.add(flow.Label);
+		}
+		return flowLabels;
 	}
 
 	private List<String> getValidationRulesMetadataApi(){
