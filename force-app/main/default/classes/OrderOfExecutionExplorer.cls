@@ -23,9 +23,25 @@ public with sharing class OrderOfExecutionExplorer {
 		Map<String, List<String>> orderOfExecutionItemsMap = new Map<String, List<String>>{
 			'Validation Rules' => this.getValidationRulesTooling(),
 			'Flows' => this.getFlows(),
-			'Before Triggers' => this.getBeforeTriggers()
+			'Before Triggers' => this.getBeforeTriggers(),
+			'Duplicate Rules' => this.getDuplicateRules()
 		};
 		return orderOfExecutionItemsMap;
+	}
+
+	private List<String> getDuplicateRules(){
+		List<DuplicateRule> duplicateRules = [
+			SELECT MasterLabel
+			FROM DuplicateRule
+			WHERE IsActive = TRUE
+				AND SobjectType = :this.objectApiName
+		];
+
+		List<String> duplicateRuleNames = new List<String>();
+		for (DuplicateRule duplicateRule : duplicateRules) {
+			duplicateRuleNames.add(duplicateRule.MasterLabel);
+		}
+		return duplicateRuleNames;
 	}
 
 	private List<String> getBeforeTriggers(){

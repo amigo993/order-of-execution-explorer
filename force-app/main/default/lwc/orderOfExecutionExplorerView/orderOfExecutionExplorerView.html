@@ -9,7 +9,7 @@
 			<div class="slds-m-bottom_x-small"><b>Here's what will run when you update the record:</b></div>
 			<template for:each={sections} for:item="section">
 				<div key={section.id}>
-					<span class="slds-text-heading_small">{section.header}</span>
+					<span class="slds-text-heading_small">{section.header}:</span>
 					<ol class="slds-list_ordered slds-m-bottom_x-small">
 						<template for:each={section.items} for:item="item">
 							<li key={item.id}>{item.name}</li> <!-- class="indented" {item.id}) -->
