@@ -15,7 +15,7 @@ public with sharing class OrderOfExecutionExplorer {
 			WHERE DeveloperName = :this.developerName
 			LIMIT 1
 		];
-		System.debug(objectDefinition);
+		// System.debug(objectDefinition);
 		this.durableId = objectDefinition.DurableId;
 	}
 
@@ -60,14 +60,19 @@ public with sharing class OrderOfExecutionExplorer {
 	}
 
 	private List<String> getValidationRulesTooling(){
-		String queryUrl =
-			'callout:Tooling_API_Credential/services/data/v59.0/tooling/query?q=SELECT+DurableId,QualifiedApiName,(SELECT+ValidationName+FROM+ValidationRules+WHERE+Active=TRUE)+FROM+EntityDefinition+WHERE+DeveloperName=\''+ this.developerName + '\'';
-		String toolingApiUrl = 'callout:Tooling_API_Credential/services/data/v59.0/tooling/query?q=';
+		// String namedCredentialsUrl = 'callout:Tooling_API_Credential/services/data/v59.0/tooling/query?q=';
+		String nonNamedCredentialsUrl = URL.getOrgDomainUrl().toExternalForm() + '/services/data/v59.0/tooling/query?q=';
 		String query = 'SELECT DurableId,QualifiedApiName,(SELECT ValidationName FROM ValidationRules WHERE Active=TRUE) FROM EntityDefinition WHERE DeveloperName=\''+ this.developerName + '\'';
 
 		HttpRequest request = new HttpRequest();
-		request.setEndpoint(toolingApiUrl + EncodingUtil.urlEncode(query, 'UTF-8'));
+		// request.setEndpoint(namedCredentialsUrl + EncodingUtil.urlEncode(query, 'UTF-8'));
+		request.setEndpoint(nonNamedCredentialsUrl + EncodingUtil.urlEncode(query, 'UTF-8'));
 		request.setMethod('GET');
+
+		//either this ot namedCredentialsUrl to get the access token
+		JWTAuthorizer authorizer = new JWTAuthorizer();
+		String accessToken = authorizer.getAccessToken();
+		request.setHeader('Authorization', 'Bearer ' + accessToken);
 
 		Http http = new Http();
 		HttpResponse response = http.send(request);
@@ -76,7 +81,6 @@ public with sharing class OrderOfExecutionExplorer {
 		if (response.getStatusCode() == 200) {
 			EntityDefinitionResponseParser parser = new EntityDefinitionResponseParser();
 			entityDefinitionWrapper = parser.parse(response);
-			System.debug(entityDefinitionWrapper);
 		} else {
 			System.debug('Error: ' + response.getStatusCode() + ' - ' + response.getStatus());
 			System.debug(response);
