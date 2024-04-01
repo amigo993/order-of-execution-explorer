@@ -22,17 +22,35 @@ public with sharing class OrderOfExecutionExplorer {
 	public Map<String, List<String>> getOrderOfExecution(){
 		Map<String, List<String>> orderOfExecutionItemsMap = new Map<String, List<String>>{
 			'Validation Rules' => this.getValidationRulesTooling(),
-			'Flows' => this.getFlows()
+			'Flows' => this.getFlows(),
+			'Before Triggers' => this.getBeforeTriggers()
 		};
 		return orderOfExecutionItemsMap;
+	}
+
+	private List<String> getBeforeTriggers(){
+		List<ApexTrigger> triggers = [
+			SELECT Name
+			FROM ApexTrigger
+			WHERE TableEnumOrId = :this.objectApiName
+				AND Status = 'Active'
+				AND (UsageBeforeInsert = TRUE OR UsageBeforeUpdate = TRUE)
+		];
+		List<String> triggerNames = new List<String>();
+		for (ApexTrigger triggerRecord : triggers) {
+			triggerNames.add(triggerRecord.Name);
+		}
+		return triggerNames;
 	}
 
 	private List<String> getValidationRulesTooling(){
 		String queryUrl =
 			'callout:Tooling_API_Credential/services/data/v59.0/tooling/query?q=SELECT+DurableId,QualifiedApiName,(SELECT+ValidationName+FROM+ValidationRules+WHERE+Active=TRUE)+FROM+EntityDefinition+WHERE+DeveloperName=\''+ this.developerName + '\'';
+		String toolingApiUrl = 'callout:Tooling_API_Credential/services/data/v59.0/tooling/query?q=';
+		String query = 'SELECT DurableId,QualifiedApiName,(SELECT ValidationName FROM ValidationRules WHERE Active=TRUE) FROM EntityDefinition WHERE DeveloperName=\''+ this.developerName + '\'';
 
 		HttpRequest request = new HttpRequest();
-		request.setEndpoint(queryUrl);
+		request.setEndpoint(toolingApiUrl + EncodingUtil.urlEncode(query, 'UTF-8'));
 		request.setMethod('GET');
 
 		Http http = new Http();
